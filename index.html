@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediScan — AI Medical Report Analyzer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── CSS Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:    #E24B4A;
+      --red-bg: #FCEBEB;
+      --red-bd: #F7C1C1;
+      --red-dk: #A32D2D;
+
+      --amber:    #BA7517;
+      --amber-bg: #FAEEDA;
+      --amber-bd: #FAC775;
+      --amber-dk: #854F0B;
+
+      --green:    #3B6D11;
+      --green-bg: #EAF3DE;
+      --green-bd: #C0DD97;
+      --green-dk: #27500A;
+
+      --teal:    #1D9E75;
+      --teal-bg: #E1F5EE;
+
+      --gray-50: #F1EFE8;
+      --gray-100: #D3D1C7;
+      --gray-200: #B4B2A9;
+      --gray-400: #888780;
+      --gray-600: #5F5E5A;
+      --gray-800: #444441;
+      --gray-900: #2C2C2A;
+
+      --body-bg: #FAFAF7;
+      --card-bg: #FFFFFF;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --sans:  'DM Sans', system-ui, sans-serif;
+      --radius: 16px;
+      --shadow: 0 2px 24px rgba(60,55,40,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--body-bg);
+      color: var(--gray-900);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background blobs ── */
+    .bg-blobs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.18;
+      animation: blobFloat 12s ease-in-out infinite;
+    }
+    .blob-1 { width: 500px; height: 500px; background: #9FE1CB; top: -120px; left: -100px; animation-delay: 0s; }
+    .blob-2 { width: 400px; height: 400px; background: #FAC775; top: 40%; right: -80px; animation-delay: -4s; }
+    .blob-3 { width: 300px; height: 300px; background: #F7C1C1; bottom: 10%; left: 20%; animation-delay: -8s; }
+    @keyframes blobFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(30px, -30px) scale(1.05); }
+      66%       { transform: translate(-20px, 20px) scale(0.97); }
+    }
+
+    /* ── Layout ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      padding: 64px 0 48px;
+      animation: fadeDown 0.7s ease both;
+    }
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--teal-bg);
+      border: 1px solid var(--green-bd);
+      border-radius: 100px;
+      padding: 6px 18px 6px 10px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--green);
+      letter-spacing: 0.02em;
+    }
+    .logo-dot {
+      width: 8px; height: 8px;
+      background: var(--teal);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+    h1 {
+      font-family: var(--serif);
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 400;
+      color: var(--gray-900);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--teal);
+    }
+    .subtitle {
+      font-size: 17px;
+      color: var(--gray-600);
+      font-weight: 300;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Upload Card ── */
+    .upload-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-100);
+      box-shadow: var(--shadow);
+      padding: 40px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.7s 0.15s ease both;
+    }
+
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--gray-100);
+      border-radius: 12px;
+      padding: 56px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      background: var(--gray-50);
+    }
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--teal);
+      background: var(--teal-bg);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 16px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .drop-zone:hover .drop-icon { transform: translateY(-4px); }
+    .drop-icon svg { width: 24px; height: 24px; }
+    .drop-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-800);
+      margin-bottom: 6px;
+    }
+    .drop-hint {
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+    .drop-hint strong { color: var(--teal); font-weight: 500; }
+
+    /* File Preview */
+    .file-preview {
+      display: none;
+      align-items: center;
+      gap: 14px;
+      background: var(--teal-bg);
+      border: 1px solid var(--green-bd);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-top: 20px;
+    }
+    .file-preview.show { display: flex; animation: popIn 0.3s ease; }
+    .file-icon {
+      width: 40px; height: 40px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--green-bd);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--green-dk);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-size { font-size: 12px; color: var(--green); }
+    .file-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--green);
+      padding: 4px;
+      border-radius: 6px;
+      display: flex;
+      transition: background 0.15s;
+    }
+    .file-remove:hover { background: rgba(29,158,117,0.1); }
+
+    /* Submit Button */
+    .btn-analyze {
+      width: 100%;
+      margin-top: 20px;
+      padding: 16px 32px;
+      background: var(--gray-900);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      letter-spacing: 0.01em;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-analyze::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      transform: translate(-50%,-50%);
+      transition: width 0.4s, height 0.4s;
+    }
+    .btn-analyze:hover::before { width: 300px; height: 300px; }
+    .btn-analyze:hover { background: var(--gray-800); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(44,44,42,0.25); }
+    .btn-analyze:active { transform: translateY(0); }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ── Loading State ── */
+    .loading-card {
+      display: none;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-100);
+      box-shadow: var(--shadow);
+      padding: 48px 40px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .loading-card.show { display: block; animation: fadeUp 0.4s ease both; }
+    .spinner-wrap { margin-bottom: 24px; }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 3px solid var(--gray-100);
+      border-top-color: var(--teal);
+      border-radius: 50%;
+      margin: 0 auto;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+    .step-pill {
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 100px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      color: var(--gray-400);
+      transition: all 0.4s;
+    }
+    .step-pill.active {
+      background: var(--teal-bg);
+      border-color: var(--green-bd);
+      color: var(--green);
+      font-weight: 500;
+    }
+    .step-pill.done {
+      background: var(--green-bg);
+      border-color: var(--green-bd);
+      color: var(--green-dk);
+    }
+
+    /* ── Results Section ── */
+    #results { display: none; }
+    #results.show { display: block; animation: fadeUp 0.5s ease both; }
+
+    .results-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .results-header h2 {
+      font-family: var(--serif);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--gray-900);
+      margin-bottom: 8px;
+    }
+    .results-header p {
+      font-size: 14px;
+      color: var(--gray-400);
+    }
+
+    /* Summary pills */
+    .summary-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .summary-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .summary-pill.high   { background: var(--red-bg);   color: var(--red-dk); border: 1px solid var(--red-bd); }
+    .summary-pill.low    { background: var(--amber-bg);  color: var(--amber-dk); border: 1px solid var(--amber-bd); }
+    .summary-pill.normal { background: var(--green-bg);  color: var(--green-dk); border: 1px solid var(--green-bd); }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .high .pill-dot   { background: var(--red); }
+    .low .pill-dot    { background: var(--amber); }
+    .normal .pill-dot { background: var(--green); }
+
+    /* Result Groups */
+    .result-group {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-100);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .group-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--gray-50);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .group-header:hover { background: var(--gray-50); }
+    .group-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .high-group   .group-icon { background: var(--red-bg);   }
+    .low-group    .group-icon { background: var(--amber-bg);  }
+    .normal-group .group-icon { background: var(--green-bg);  }
+
+    .group-title {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+    .group-count {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 3px 12px;
+      border-radius: 100px;
+    }
+    .high-group   .group-count { background: var(--red-bg);   color: var(--red-dk);   border: 1px solid var(--red-bd); }
+    .low-group    .group-count { background: var(--amber-bg);  color: var(--amber-dk);  border: 1px solid var(--amber-bd); }
+    .normal-group .group-count { background: var(--green-bg);  color: var(--green-dk);  border: 1px solid var(--green-bd); }
+
+    .chevron {
+      width: 20px; height: 20px;
+      color: var(--gray-400);
+      transition: transform 0.25s ease;
+    }
+    .group-header.open .chevron { transform: rotate(180deg); }
+
+    /* Group Body */
+    .group-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .group-body.open { max-height: 2000px; }
+    .group-inner { padding: 16px 28px 24px; }
+
+    /* Individual result items */
+    .result-items { display: flex; flex-direction: column; gap: 12px; }
+    .result-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      animation: itemSlide 0.4s ease both;
+    }
+    .result-item:nth-child(2) { animation-delay: 0.05s; }
+    .result-item:nth-child(3) { animation-delay: 0.1s; }
+    .result-item:nth-child(4) { animation-delay: 0.15s; }
+    .result-item:nth-child(5) { animation-delay: 0.2s; }
+
+    .high-group   .result-item { background: var(--red-bg);   border-color: var(--red-bd); }
+    .low-group    .result-item { background: var(--amber-bg);  border-color: var(--amber-bd); }
+    .normal-group .result-item { background: var(--green-bg);  border-color: var(--green-bd); }
+
+    .item-marker {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .high-group   .item-marker { background: var(--red); }
+    .low-group    .item-marker { background: var(--amber); }
+    .normal-group .item-marker { background: var(--green); }
+
+    .item-body { flex: 1; }
+    .item-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-900);
+      margin-bottom: 4px;
+    }
+    .high-group   .item-name { color: var(--red-dk); }
+    .low-group    .item-name { color: var(--amber-dk); }
+    .normal-group .item-name { color: var(--green-dk); }
+
+    .item-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .item-value {
+      font-size: 13px;
+      color: var(--gray-800);
+    }
+    .item-range {
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+    .item-status-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .high-group   .item-status-badge { background: var(--red);   color: #fff; }
+    .low-group    .item-status-badge { background: var(--amber);  color: #fff; }
+    .normal-group .item-status-badge { background: var(--green);  color: #fff; }
+
+    /* Empty state */
+    .empty-group {
+      padding: 24px 28px;
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 14px;
+    }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      margin-top: 32px;
+      padding: 16px 24px;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-bd);
+      border-radius: 12px;
+      font-size: 13px;
+      color: var(--amber-dk);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      line-height: 1.6;
+    }
+    .disclaimer-icon { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Try Again Button ── */
+    .btn-again {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 28px auto 0;
+      padding: 12px 28px;
+      background: none;
+      border: 1px solid var(--gray-200);
+      border-radius: 100px;
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-again:hover { background: var(--gray-50); border-color: var(--gray-400); color: var(--gray-900); }
+
+    /* ── Error State ── */
+    .error-card {
+      display: none;
+      background: var(--red-bg);
+      border: 1px solid var(--red-bd);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .error-card.show { display: block; animation: fadeUp 0.4s ease both; }
+    .error-card h3 {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      color: var(--red-dk);
+      margin-bottom: 8px;
+    }
+    .error-card p { font-size: 14px; color: var(--red); }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(0.94); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes itemSlide {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .upload-card { padding: 24px 20px; }
+      .group-inner { padding: 12px 16px 20px; }
+      .group-header { padding: 16px 20px; }
+      .summary-row { gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Header -->
+    <header>
+      <div class="logo-badge">
+        <div class="logo-dot"></div>
+        AI-Powered Analysis
+      </div>
+      <h1>Your <em>medical report</em>,<br>decoded instantly</h1>
+      <p class="subtitle">Upload any blood test or lab report and get clear, structured insights highlighting what needs your attention.</p>
+    </header>
+
+    <!-- Upload Card -->
+    <div class="upload-card" id="uploadSection">
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" />
+        <div class="drop-icon">
+          <!-- Upload SVG icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gray-400)">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <p class="drop-label">Drop your report here</p>
+        <p class="drop-hint">or <strong>click to browse</strong> &nbsp;·&nbsp; PDF, PNG, JPG supported</p>
+      </div>
+
+      <!-- File Preview -->
+      <div class="file-preview" id="filePreview">
+        <div class="file-icon">
+          <!-- File SVG icon -->
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: var(--green)">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class="file-info">
+          <div class="file-name" id="fileName">report.pdf</div>
+          <div class="file-size" id="fileSize">2.4 MB</div>
+        </div>
+        <button class="file-remove" id="removeFile" title="Remove file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Analyze Button -->
+      <button class="btn-analyze" id="analyzeBtn" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Analyze Report
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-card" id="loadingCard">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+      <p style="font-size:15px; font-weight:500; color:var(--gray-800); margin-bottom:6px;" id="loadingText">Extracting text from report…</p>
+      <p style="font-size:13px; color:var(--gray-400);">This usually takes 5–15 seconds</p>
+      <div class="loading-steps">
+        <div class="step-pill active" id="step1">Uploading</div>
+        <div class="step-pill" id="step2">Extracting text</div>
+        <div class="step-pill" id="step3">Running AI</div>
+        <div class="step-pill" id="step4">Building results</div>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-card" id="errorCard">
+      <h3>Analysis failed</h3>
+      <p id="errorMsg">Something went wrong. Please try again.</p>
+      <button class="btn-again" onclick="resetApp()" style="margin-top:16px;">
+        Try again
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div id="results">
+      <div class="results-header">
+        <h2>Analysis complete</h2>
+        <p id="resultsMeta">0 values detected across your report</p>
+      </div>
+
+      <!-- Summary pills -->
+      <div class="summary-row">
+        <div class="summary-pill high">
+          <div class="pill-dot"></div>
+          <span id="highCount">0 High</span>
+        </div>
+        <div class="summary-pill low">
+          <div class="pill-dot"></div>
+          <span id="lowCount">0 Low</span>
+        </div>
+        <div class="summary-pill normal">
+          <div class="pill-dot"></div>
+          <span id="normalCount">0 Normal</span>
+        </div>
+      </div>
+
+      <!-- High Values -->
+      <div class="result-group high-group" id="highGroup">
+        <div class="group-header open" onclick="toggleGroup('high')">
+          <div class="group-icon">
+            <!-- Arrow up SVG -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"/>
+            </svg>
+          </div>
+          <span class="group-title">High Values</span>
+          <span class="group-count" id="highCountBadge">0</span>
+          <svg class="chevron open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="group-body open" id="highBody">
+          <div class="group-inner">
+            <div class="result-items" id="highItems"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Values -->
+      <div class="result-group low-group" id="lowGroup">
+        <div class="group-header open" onclick="toggleGroup('low')">
+          <div class="group-icon">
+            <!-- Arrow down SVG -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9" transform="rotate(180 12 12)"/>
+            </svg>
+          </div>
+          <span class="group-title">Low Values</span>
+          <span class="group-count" id="lowCountBadge">0</span>
+          <svg class="chevron open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="group-body open" id="lowBody">
+          <div class="group-inner">
+            <div class="result-items" id="lowItems"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Normal Values -->
+      <div class="result-group normal-group" id="normalGroup">
+        <div class="group-header" onclick="toggleGroup('normal')">
+          <div class="group-icon">
+            <!-- Check SVG -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="group-title">Normal Values</span>
+          <span class="group-count" id="normalCountBadge">0</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="group-body" id="normalBody">
+          <div class="group-inner">
+            <div class="result-items" id="normalItems"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical Disclaimer -->
+      <div class="disclaimer">
+        <svg class="disclaimer-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span><strong>Medical disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical advice. Always consult your doctor or a qualified healthcare provider for interpretation of your test results.</span>
+      </div>
+
+      <!-- Analyze Another -->
+      <button class="btn-again" onclick="resetApp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+        </svg>
+        Analyze another report
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Configuration ──
+    // Change this to your FastAPI backend URL
+    const API_BASE = 'http://localhost:8000';
+
+    // ── State ──
+    let selectedFile = null;
+
+    // ── DOM refs ──
+    const fileInput    = document.getElementById('fileInput');
+    const dropZone     = document.getElementById('dropZone');
+    const filePreview  = document.getElementById('filePreview');
+    const fileName     = document.getElementById('fileName');
+    const fileSize     = document.getElementById('fileSize');
+    const removeFile   = document.getElementById('removeFile');
+    const analyzeBtn   = document.getElementById('analyzeBtn');
+    const loadingCard  = document.getElementById('loadingCard');
+    const uploadSection= document.getElementById('uploadSection');
+    const results      = document.getElementById('results');
+    const errorCard    = document.getElementById('errorCard');
+
+    // ── File Input Handling ──
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const f = e.dataTransfer.files[0];
+      if (f) handleFile(f);
+    });
+
+    // Remove file
+    removeFile.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      analyzeBtn.disabled = true;
+    });
+
+    function handleFile(file) {
+      if (!file) return;
+      // Validate type
+      const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+      if (!allowed.includes(file.type)) {
+        showError('Unsupported file type. Please upload a PDF or image (PNG, JPG, WEBP).');
+        return;
+      }
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+      filePreview.classList.add('show');
+      analyzeBtn.disabled = false;
+    }
+
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    // ── Analyze Button ──
+    analyzeBtn.addEventListener('click', runAnalysis);
+
+    async function runAnalysis() {
+      if (!selectedFile) return;
+
+      // Show loading, hide form
+      uploadSection.style.display = 'none';
+      errorCard.classList.remove('show');
+      results.classList.remove('show');
+      loadingCard.classList.add('show');
+
+      // Animate loading steps
+      const steps = animateLoadingSteps();
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const res = await fetch(`${API_BASE}/analyze`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ detail: 'Server error' }));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        clearInterval(steps);
+        markStepDone(4);
+
+        // Small delay so user sees the final step
+        await delay(400);
+        loadingCard.classList.remove('show');
+        renderResults(data);
+
+      } catch (err) {
+        clearInterval(steps);
+        loadingCard.classList.remove('show');
+        showError(err.message);
+        uploadSection.style.display = 'block';
+      }
+    }
+
+    // ── Loading Step Animation ──
+    let stepIndex = 1;
+    function animateLoadingSteps() {
+      stepIndex = 1;
+      markStepActive(1);
+      return setInterval(() => {
+        stepIndex++;
+        if (stepIndex <= 4) markStepActive(stepIndex);
+      }, 2500);
+    }
+
+    function markStepActive(n) {
+      for (let i = 1; i < n; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active');
+        el.classList.add('done');
+      }
+      const el = document.getElementById(`step${n}`);
+      if (el) { el.classList.add('active'); el.classList.remove('done'); }
+
+      const texts = ['Uploading file…', 'Extracting text from report…', 'Running AI analysis…', 'Building results…'];
+      document.getElementById('loadingText').textContent = texts[n - 1] || texts[0];
+    }
+
+    function markStepDone(n) {
+      for (let i = 1; i <= n; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active');
+        el.classList.add('done');
+      }
+    }
+
+    // ── Render Results ──
+    function renderResults(data) {
+      const high   = data.high_values   || [];
+      const low    = data.low_values    || [];
+      const normal = data.normal_values || [];
+      const total  = high.length + low.length + normal.length;
+
+      // Summary counts
+      document.getElementById('highCount').textContent   = `${high.length} High`;
+      document.getElementById('lowCount').textContent    = `${low.length} Low`;
+      document.getElementById('normalCount').textContent = `${normal.length} Normal`;
+      document.getElementById('resultsMeta').textContent = `${total} value${total !== 1 ? 's' : ''} detected across your report`;
+
+      // Badges
+      document.getElementById('highCountBadge').textContent   = high.length;
+      document.getElementById('lowCountBadge').textContent    = low.length;
+      document.getElementById('normalCountBadge').textContent = normal.length;
+
+      // Render items
+      renderItems('highItems', high, 'HIGH');
+      renderItems('lowItems', low, 'LOW');
+      renderItems('normalItems', normal, 'NORMAL');
+
+      results.classList.add('show');
+    }
+
+    function renderItems(containerId, items, label) {
+      const container = document.getElementById(containerId);
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div class="empty-group">No values in this category</div>';
+        return;
+      }
+      container.innerHTML = items.map(item => `
+        <div class="result-item">
+          <div class="item-marker"></div>
+          <div class="item-body">
+            <div class="item-name">${escHtml(item.name || 'Unknown')}</div>
+            <div class="item-details">
+              ${item.value    ? `<span class="item-value">Value: <strong>${escHtml(String(item.value))}</strong></span>` : ''}
+              ${item.unit     ? `<span class="item-range">${escHtml(item.unit)}</span>` : ''}
+              ${item.normal_range ? `<span class="item-range">Ref: ${escHtml(item.normal_range)}</span>` : ''}
+              <span class="item-status-badge">${label}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Collapsible Groups ──
+    function toggleGroup(type) {
+      const header = document.querySelector(`#${type}Group .group-header`);
+      const body   = document.getElementById(`${type}Body`);
+      const isOpen = body.classList.contains('open');
+      body.classList.toggle('open', !isOpen);
+      header.classList.toggle('open', !isOpen);
+      const chevron = header.querySelector('.chevron');
+      chevron.classList.toggle('open', !isOpen);
+    }
+
+    // ── Error Display ──
+    function showError(msg) {
+      document.getElementById('errorMsg').textContent = msg;
+      errorCard.classList.add('show');
+    }
+
+    // ── Reset App ──
+    function resetApp() {
+      selectedFile = null;
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      analyzeBtn.disabled = true;
+      results.classList.remove('show');
+      errorCard.classList.remove('show');
+      loadingCard.classList.remove('show');
+      uploadSection.style.display = 'block';
+      // Reset step pills
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active', 'done');
+      }
+      document.getElementById('step1').classList.add('active');
+    }
+
+    // ── Utilities ──
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# ============================================================
+# requirements.txt — MediScan Backend Dependencies
+# ============================================================
+# Install with: pip install -r requirements.txt
+# Also install Tesseract binary: see README.md
+# ============================================================
+
+# Web framework
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+
+# File upload handling (included with FastAPI)
+python-multipart==0.0.12
+
+# Anthropic Claude AI client
+anthropic==0.40.0
+
+# PDF processing (PyMuPDF — fast, no system deps)
+PyMuPDF==1.24.14
+
+# OCR for images and scanned PDFs
+Pillow==11.0.0
+pytesseract==0.3.13
+
+# Environment variable management
+python-dotenv==1.0.1
