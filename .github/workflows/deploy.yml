@@ -20,23 +20,43 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22   # 🔥 FIX: don't rely on secret, hardcode SSH port
+          port: 22
 
           script: |
             echo "🚀 Starting deployment..."
 
-            cd ~/medical-report-analyzer || exit 1
+            # Go to home
+            cd ~
+
+            # Clone repo if not exists
+            if [ ! -d "medical-report-analyzer" ]; then
+              echo "📥 Cloning repository..."
+              git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git medical-report-analyzer
+            fi
+
+            cd medical-report-analyzer
 
             echo "📥 Pulling latest code..."
             git pull origin main
 
-            echo "🐍 Activating virtual environment..."
-            source backend/venv/bin/activate
+            echo "📂 Moving to backend..."
+            cd backend
+
+            echo "🐍 Setting up virtual environment..."
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+
+            source venv/bin/activate
 
             echo "📦 Installing dependencies..."
-            pip install -r backend/requirements.txt
+            pip install --upgrade pip
+            pip install -r requirements.txt
 
             echo "🔄 Restarting service..."
             sudo systemctl restart mediscan
+
+            echo "📊 Checking service status..."
+            sudo systemctl status mediscan --no-pager
 
             echo "✅ Deployment completed!"
