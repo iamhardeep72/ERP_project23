@@ -20,13 +20,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
-          
+          port: 22   # 🔥 FIX: don't rely on secret, hardcode SSH port
 
           script: |
             echo "🚀 Starting deployment..."
 
-            cd ~/medical-report-analyzer
+            cd ~/medical-report-analyzer || exit 1
 
             echo "📥 Pulling latest code..."
             git pull origin main
